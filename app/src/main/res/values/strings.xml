@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Fix and Go</string>
+    <string name="title_activity_add_request">AddRequest</string>
+    <string name="title_activity_edit_request">EditRequest</string>
+    <string name="title_requests">Fix Requests</string>
+    <string name="title_professionals">Professionals</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title">Title</string>
+    <string name="description">Description</string>
+    <string name="user_name">Name</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="email">Email</string>
+    <string name="request_title">Leaking sink!</string>
+    <string name="request_description">My sink is dropping water! I cannot stop it.</string>
+    <string name="request_name">Hannah Connors</string>
+    <string name="request_email">hconnors@gmail.com</string>
+</resources>
