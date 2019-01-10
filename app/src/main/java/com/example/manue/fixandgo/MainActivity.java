@@ -1,9 +1,11 @@
 package com.example.manue.fixandgo;
 
+import android.arch.lifecycle.Observer;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -23,18 +25,12 @@ public class MainActivity extends AppCompatActivity implements RequestAdapter.Re
     private RequestAdapter mAdapter;
     private RecyclerView mRecyclerView;
     private TextView mTextMessage;
+    private MainViewModel mMainViewModel;
 
     public static final String EXTRA_REQUEST = "Request";
     public static final int REQUESTCODE1 = 1234;
     public static final int REQUESTCODE2 = 5678;
     private int mModifyPosition;
-
-    public final static int TASK_GET_ALL_REQUESTS = 0;
-    public final static int TASK_DELETE_REQUEST = 1;
-    public final static int TASK_UPDATE_REQUEST = 2;
-    public final static int TASK_INSERT_REQUEST = 3;
-
-    static AppDatabase db;
 
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -63,15 +59,24 @@ public class MainActivity extends AppCompatActivity implements RequestAdapter.Re
         setContentView(R.layout.activity_main);
 
         //Initialize the local variables
-
-        db = AppDatabase.getInstance(this);
-
-        mRequests = new ArrayList<>();
-        new RequestAsyncTask(TASK_GET_ALL_REQUESTS).execute();
-
         mRecyclerView = findViewById(R.id.recyclerView);
         updateUI();
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        mRequests = new ArrayList<>();
+
+        mMainViewModel = new MainViewModel(getApplicationContext());
+
+        mMainViewModel.getRequests().observe(this, new Observer<List<Request>>() {
+            @Override
+            public void onChanged(@Nullable List<Request> requests) {
+                mRequests = requests;
+                updateUI();
+            }
+        });
+
+
+
+
 
         ItemTouchHelper.SimpleCallback simpleItemTouchCallback =
                 new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -87,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements RequestAdapter.Re
 
                         //Get the index corresponding to the selected position
                         int position = (viewHolder.getAdapterPosition());
-                        new RequestAsyncTask(TASK_DELETE_REQUEST).execute(mRequests.get(position));
+                        mMainViewModel.delete(mRequests.get(position));
 
                     }
 
@@ -108,11 +113,7 @@ public class MainActivity extends AppCompatActivity implements RequestAdapter.Re
 
     }
 
-    void onRequestDbUpdated(List list) {
-        mRequests = list;
-        updateUI();
 
-    }
 
     private void updateUI() {
 //        mGames = db.reminderDao().getAllGames();
@@ -140,54 +141,15 @@ public class MainActivity extends AppCompatActivity implements RequestAdapter.Re
             if (resultCode == RESULT_OK){
                 Request addedRequest = data.getParcelableExtra(EXTRA_REQUEST);
                 mRequests.add(addedRequest);
-                new RequestAsyncTask(TASK_INSERT_REQUEST).execute(addedRequest);
+                mMainViewModel.insert(addedRequest);
             }
         } else if (requestCode == REQUESTCODE2){
             if(resultCode == RESULT_OK){
                 Request editedRequest = data.getParcelableExtra(EXTRA_REQUEST);
                 mRequests.set(mModifyPosition, editedRequest);
-                new RequestAsyncTask(TASK_UPDATE_REQUEST).execute(editedRequest);
+                mMainViewModel.update(editedRequest);
             }
         }
-    }
-
-    public class RequestAsyncTask extends AsyncTask<Request, Void, List> {
-
-        private int taskCode;
-
-        public RequestAsyncTask(int taskCode) {
-            this.taskCode = taskCode;
-        }
-
-
-        @Override
-        protected List doInBackground(Request... requests) {
-            switch (taskCode) {
-                case TASK_DELETE_REQUEST:
-                    db.requestDao().deleteRequest(requests[0]);
-                    break;
-
-                case TASK_UPDATE_REQUEST:
-                    db.requestDao().updateRequest(requests[0]);
-                    break;
-
-                case TASK_INSERT_REQUEST:
-                    db.requestDao().insertRequest(requests[0]);
-                    break;
-            }
-
-
-            //To return a new list with the updated data, we get all the data from the database again.
-            return db.requestDao().getAllRequests();
-        }
-
-
-        @Override
-        protected void onPostExecute(List list) {
-            super.onPostExecute(list);
-            onRequestDbUpdated(list);
-        }
-
     }
 
 }

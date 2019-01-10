@@ -1,5 +1,6 @@
 package com.example.manue.fixandgo;
 
+import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
@@ -17,7 +18,7 @@ import android.arch.persistence.room.Update;
 public interface RequestDao {
 
     @Query("SELECT * FROM request")
-    public List<Request> getAllRequests();
+    public LiveData<List<Request>> getAllRequests();
 
     @Insert
     public void insertRequest(Request request);
